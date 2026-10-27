@@ -1,0 +1,641 @@
+احفظ الكود التالي باسم `lost-treasure.html` ثم افتحه مباشرة في أي متصفح حديث.  
+يعتمد المحتوى على درس: **تعزيز مسيرة الاتحاد في مجالات حيوية**، والأسئلة قابلة للتعديل من مصفوفة `stages` داخل JavaScript.
+
+```html
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>الكنز المفقود | الدراسات الاجتماعية</title>
+<style>
+:root{
+  --gold:#e5bb55; --gold2:#9c7020; --brown:#301b10; --paper:#f7e8bd;
+  --navy:#102b45; --green:#2f7256; --red:#a43a2c; --ink:#25180f;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:Tahoma,"Arial",sans-serif;color:var(--ink);
+  background:radial-gradient(circle at top,#345b70,#102233 58%,#09141d);
+  min-height:100vh;overflow-x:hidden
+}
+button,input,select{font:inherit}
+button{cursor:pointer;border:0;transition:.25s}
+button:hover{transform:translateY(-2px);filter:brightness(1.08)}
+.hidden{display:none!important}
+.screen{min-height:100vh;padding:22px;display:none;align-items:center;justify-content:center}
+.screen.active{display:flex}
+.card{
+  width:min(980px,100%);background:linear-gradient(135deg,#fff5d6,#e9cb82);
+  border:5px solid var(--gold2);border-radius:24px;box-shadow:0 18px 45px #0009;
+  padding:28px;position:relative;overflow:hidden
+}
+.card:before{
+  content:"✦  ✧  ✦";position:absolute;opacity:.09;font-size:8rem;left:4%;top:2%;
+  color:var(--brown);transform:rotate(-15deg)
+}
+h1,h2,h3{color:var(--brown);position:relative}
+h1{font-size:clamp(2rem,5vw,4rem);margin:.2em 0}
+h2{font-size:clamp(1.5rem,3vw,2.4rem)}
+p,li{line-height:1.9}
+.center{text-align:center}
+.subtitle{font-size:1.2rem;color:#65451b}
+.info-box{
+  position:relative;background:#fff9e9cc;border-right:6px solid var(--gold2);
+  padding:14px 18px;border-radius:12px;margin:14px 0
+}
+.btn{
+  padding:13px 22px;border-radius:12px;background:linear-gradient(135deg,var(--gold),#a56f19);
+  color:#241505;font-weight:bold;margin:6px;box-shadow:0 4px 0 #63400b
+}
+.btn.primary{background:linear-gradient(135deg,#2f8d71,#15503d);color:white;box-shadow:0 4px 0 #0b3829}
+.btn.danger{background:linear-gradient(135deg,#d9664f,#8d291e);color:white}
+.btn.gray{background:#5b6469;color:white;box-shadow:0 4px 0 #30373a}
+input,select{
+  width:min(440px,100%);padding:13px;border:2px solid #b78a35;border-radius:10px;
+  background:#fffdf4;margin:7px;font-size:1rem
+}
+.badges{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.badge{background:#553c1c;color:#fff3c9;padding:8px 13px;border-radius:99px;font-size:.9rem}
+.topbar{
+  position:fixed;z-index:10;top:0;right:0;left:0;background:#102b45ef;color:#fff;
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-around;gap:8px;
+  padding:9px;border-bottom:2px solid var(--gold)
+}
+.progress-wrap{width:min(230px,60vw);height:13px;background:#ffffff44;border-radius:9px;overflow:hidden}
+.progress{height:100%;background:linear-gradient(90deg,#e3b544,#fff1a4);width:0%;transition:.5s}
+.map-card{width:min(1200px,100%);margin-top:60px}
+.map{
+  position:relative;min-height:590px;border-radius:22px;overflow:hidden;border:8px solid #875b22;
+  background:
+   radial-gradient(circle at 20% 25%,#77a95c 0 9%,transparent 9.5%),
+   radial-gradient(circle at 80% 70%,#619f59 0 11%,transparent 11.5%),
+   radial-gradient(circle at 72% 18%,#80ae63 0 7%,transparent 7.5%),
+   linear-gradient(135deg,#e9d292,#b88d42);
+}
+.map:before{
+ content:"";position:absolute;inset:0;opacity:.28;
+ background-image:repeating-linear-gradient(30deg,transparent 0 58px,#583b1d 60px 63px,transparent 65px 118px);
+}
+.route{
+ position:absolute;border:5px dashed #703e1b;border-left:0;border-bottom:0;border-radius:0 110px 0 0;
+ width:70%;height:52%;top:27%;right:15%;transform:rotate(-8deg);opacity:.7
+}
+.site{
+ position:absolute;z-index:2;width:145px;min-height:95px;padding:10px;border-radius:18px;
+ border:3px solid #70471d;background:#fff0b9e8;color:#321d0a;font-weight:bold;text-align:center;
+ box-shadow:0 5px 0 #79501e
+}
+.site:before{display:block;font-size:2.2rem}
+.site.locked{filter:grayscale(1);opacity:.65;cursor:not-allowed}
+.site.done{background:#bce39f}
+.site.current{animation:pulse 1.2s infinite}
+.site:nth-of-type(2){right:6%;top:12%}.site:nth-of-type(3){right:33%;top:42%}
+.site:nth-of-type(4){right:64%;top:17%}.site:nth-of-type(5){right:55%;bottom:7%}
+.site:nth-of-type(6){left:6%;bottom:18%}
+@keyframes pulse{50%{box-shadow:0 0 0 13px #f8d46a77,0 5px 0 #79501e}}
+.stage-head{display:flex;align-items:center;gap:14px;justify-content:space-between;flex-wrap:wrap}
+.challenge{
+ background:#fff9e9;border:2px dashed #b2832a;padding:20px;border-radius:16px;margin:18px 0;
+ position:relative
+}
+.options{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-top:15px}
+.option{
+ text-align:right;background:#edf4e8;border:2px solid #8aac78;border-radius:12px;padding:13px;color:#203a2d
+}
+.option.selected{background:#d9b95e;border-color:#765016}
+.feedback{padding:14px;border-radius:12px;margin:12px 0;font-weight:bold}
+.feedback.ok{background:#d8f2d2;color:#17552e;border:2px solid #63a568}
+.feedback.no{background:#ffe0d9;color:#842d20;border:2px solid #dc836e}
+.match-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.match-item{padding:12px;border:2px solid #9c7a36;background:#fff9e8;border-radius:10px;cursor:pointer}
+.match-item.selected{background:#f0cf71}
+.order-list{display:grid;gap:10px}
+.order-row{display:flex;gap:9px;align-items:center;background:#fffbea;padding:9px;border-radius:9px;border:1px solid #c59b42}
+.order-row select{margin:0;width:75px}
+.treasure{
+ font-size:6rem;filter:drop-shadow(0 0 16px #ffdf5a);animation:float 2s ease-in-out infinite
+}
+@keyframes float{50%{transform:translateY(-13px) rotate(3deg)}}
+.chest{font-size:7rem;cursor:pointer;display:inline-block;transition:.4s}
+.chest.open{transform:rotateX(30deg) scale(1.12);filter:drop-shadow(0 0 18px gold)}
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;background:#fffbed}
+th,td{padding:10px;border:1px solid #c79d43;text-align:center}
+th{background:#543918;color:#fff4ce}
+.certificate{
+ width:210mm;min-height:297mm;background:#fffdf6;color:#24170c;padding:25mm 18mm;
+ border:15px double #b48a32;text-align:center;position:relative
+}
+.certificate h1{font-size:2.6rem}.certificate .seal{font-size:5rem}
+.print-only{display:none}
+.small{font-size:.88rem;color:#6a5025}
+@media(max-width:650px){
+ .card{padding:18px;border-width:3px}.map{min-height:650px}.site{width:118px;font-size:.82rem}
+ .match-grid{grid-template-columns:1fr}.certificate{width:100%;min-height:auto;padding:18px}
+}
+@media print{
+ body{background:#fff}.screen,.topbar{display:none!important}
+ #certificateScreen{display:block!important;padding:0}.certificate{display:block;margin:auto;border:12px double #b48a32}
+ .print-only{display:block}
+}
+</style>
+</head>
+<body>
+
+<div id="topbar" class="topbar hidden">
+  <span>👤 <b id="playerLabel">المستكشف</b></span>
+  <span>⭐ النقاط: <b id="scoreLabel">0</b>/100</span>
+  <span>🔑 المفاتيح: <b id="keysLabel">0</b>/4</span>
+  <span>🧩 الأدلة: <b id="cluesLabel">0</b>/5</span>
+  <div class="progress-wrap"><div id="progressBar" class="progress"></div></div>
+  <button class="btn gray" onclick="toggleSound()">🔊 الصوت</button>
+  <button class="btn gray" onclick="showScreen('mapScreen')">🗺 الخريطة</button>
+</div>
+
+<section id="startScreen" class="screen active">
+ <div class="card center">
+  <div class="treasure">🗺️</div>
+  <h1>الكنز المفقود</h1>
+  <div class="subtitle">THE LOST TREASURE</div>
+  <p><b>«رحلتك تبدأ بالخريطة، وكنزك ينتظرك في نهاية المغامرة»</b></p>
+  <div class="info-box">
+   عُثر على خريطة قديمة تقود إلى كنز معرفي مفقود، لكن الطريق إليه مغلق بأربعة أختام سرية.
+   لن يتمكن المستكشف من الوصول إلى الكنز إلا إذا حل الألغاز، وقرأ الأدلة، واستخدم مهاراته
+   في تحليل المعلومات التاريخية والجغرافية. هل أنت مستعد لخوض المغامرة؟
+  </div>
+  <div class="badges">
+   <span class="badge">المادة: الدراسات الاجتماعية</span>
+   <span class="badge">المعلم: رائد السقار</span>
+   <span class="badge">مدرسة محمد بن راشد الحلقة الثانية والثالثة</span>
+  </div>
+  <br>
+  <button class="btn primary" onclick="showScreen('profileScreen')">ابدأ المغامرة ✦</button>
+  <button class="btn gray" onclick="openTeacher()">لوحة المعلم</button>
+ </div>
+</section>
+
+<section id="profileScreen" class="screen">
+ <div class="card center">
+  <h2>معسكر المستكشفين ⛺</h2>
+  <p>أدخل بياناتك لتسجيل رحلتك وحفظ نتائجك محليًا على هذا الجهاز.</p>
+  <input id="studentName" placeholder="اسم الطالب / الطالبة">
+  <br>
+  <select id="studentGrade">
+   <option value="">اختر الصف الدراسي</option>
+   <option>الحلقة الثانية</option>
+   <option>الحلقة الثالثة</option>
+   <option>صف مخصص</option>
+  </select><br>
+  <button class="btn primary" onclick="startGame()">استلام الخريطة</button>
+  <button class="btn gray" onclick="showScreen('startScreen')">عودة</button>
+ </div>
+</section>
+
+<section id="instructionsScreen" class="screen">
+ <div class="card">
+  <h2>تعليمات الرحلة</h2>
+  <ol>
+   <li>اختر موقعًا متاحًا على الخريطة وأكمل تحديه.</li>
+   <li>الإجابة الصحيحة تمنحك نقاطًا ودليلًا أو مفتاحًا.</li>
+   <li>عند الخطأ ستظهر لك تغذية راجعة وتلميح، ويمكنك المحاولة مرة أخرى.</li>
+   <li>تفتح المواقع بالترتيب؛ فكل موقع يحمل ختمًا من أختام الكنز.</li>
+   <li>تحفظ اللعبة تقدمك محليًا خلال الجلسة وعلى الجهاز عند توفر التخزين المحلي.</li>
+  </ol>
+  <div class="info-box">محتوى اللعبة مبني على درس: <b>تعزيز مسيرة الاتحاد في مجالات حيوية</b>.</div>
+  <div class="center">
+   <button class="btn primary" onclick="showScreen('mapScreen');renderMap()">انطلق إلى الخريطة</button>
+  </div>
+ </div>
+</section>
+
+<section id="mapScreen" class="screen">
+ <div class="card map-card">
+  <div class="stage-head">
+   <div><h2>خريطة الكنز المعرفي</h2><span class="small">اتبع المسار من معسكر المستكشفين حتى الصندوق النهائي.</span></div>
+   <button class="btn gray" onclick="saveGame()">💾 حفظ التقدم</button>
+  </div>
+  <div class="map">
+   <div class="route"></div>
+   <button class="site" id="site0" onclick="openStage(0)">⛺<br>معسكر البداية<br><small>خريطة الاتحاد</small></button>
+   <button class="site locked" id="site1" onclick="openStage(1)">🏝️<br>جزيرة المعرفة<br><small>البنية التحتية</small></button>
+   <button class="site locked" id="site2" onclick="openStage(2)">🪨<br>كهف الأدلة<br><small>توحيد القوات</small></button>
+   <button class="site locked" id="site3" onclick="openStage(3)">🏛️<br>بوابة الاستكشاف<br><small>القيادة والمساهمات</small></button>
+   <button class="site locked" id="site4" onclick="openStage(4)">💎<br>الكنز النهائي<br><small>خاتمة الرحلة</small></button>
+  </div>
+  <p class="small center">🔒 المواقع المغلقة لا تفتح إلا بعد إكمال الموقع السابق.</p>
+ </div>
+</section>
+
+<section id="stageScreen" class="screen">
+ <div class="card">
+  <div class="stage-head">
+   <div>
+    <h2 id="stageTitle"></h2>
+    <p id="stageStory" class="subtitle"></p>
+   </div>
+   <div class="badge" id="stageCounter"></div>
+  </div>
+  <div id="challengeArea"></div>
+  <div class="center">
+   <button class="btn gray" onclick="showScreen('mapScreen');renderMap()">عودة إلى الخريطة</button>
+  </div>
+ </div>
+</section>
+
+<section id="rewardScreen" class="screen">
+ <div class="card center">
+  <div id="rewardIcon" class="treasure">🔑</div>
+  <h2 id="rewardTitle">أحسنت!</h2>
+  <p id="rewardText"></p>
+  <div id="rewardBadge" class="badge"></div><br>
+  <button class="btn primary" onclick="afterReward()">متابعة الخريطة</button>
+ </div>
+</section>
+
+<section id="finalScreen" class="screen">
+ <div class="card center">
+  <div class="chest" id="finalChest" onclick="openChest()">📦</div>
+  <h1>صندوق الكنز النهائي</h1>
+  <p>لقد جمعت المفاتيح والأدلة. بقي رمز واحد لفتح الصندوق:</p>
+  <div class="info-box">
+   <b>ما الفكرة الجامعة التي تؤكدها مبادرات الشيخ زايد - رحمه الله - في البنية التحتية،
+   وتوحيد القوات، والعطاء الإنساني، والعلم؟</b>
+  </div>
+  <div class="options">
+   <button class="option" onclick="finalAnswer(false)">التفرق أساس القوة</button>
+   <button class="option" onclick="finalAnswer(true)">الاتحاد وخدمة الإنسان وتعزيز الوطن</button>
+   <button class="option" onclick="finalAnswer(false)">الإنجازات لا ترتبط بالمواطن</button>
+  </div>
+  <div id="finalFeedback"></div>
+ </div>
+</section>
+
+<section id="resultsScreen" class="screen">
+ <div class="card center">
+  <div class="treasure">🏆</div>
+  <h1>تم العثور على الكنز المعرفي!</h1>
+  <p id="resultSummary"></p>
+  <div id="earnedBadges" class="badges"></div><br>
+  <button class="btn primary" onclick="issueCertificate()">عرض شهادة الإنجاز</button>
+  <button class="btn gray" onclick="restartGame()">إعادة اللعب</button>
+  <button class="btn gray" onclick="openTeacher()">لوحة المعلم</button>
+ </div>
+</section>
+
+<section id="certificateScreen" class="screen">
+ <div class="certificate">
+  <div class="seal">🏅</div>
+  <h1>شهادة إتمام مغامرة الكنز المفقود</h1>
+  <hr>
+  <p>تشهد لعبة <b>الكنز المفقود</b> بأن الطالب / الطالبة:</p>
+  <h2 id="certName"></h2>
+  <p>قد أكمل تحديات الدراسات الاجتماعية وأظهر مهارات في الاستكشاف والتحليل والاستدلال.</p>
+  <h2>النتيجة: <span id="certScore"></span> / 100</h2>
+  <p>المعلم: <b>رائد السقار</b></p>
+  <p>المدرسة: <b>مدرسة محمد بن راشد الحلقة الثانية والثالثة</b></p>
+  <p>تاريخ الإصدار: <b id="certDate"></b></p>
+  <br><br>
+  <p>التوقيع: ____________________</p>
+  <div class="print-only">شهادة تعليمية صادرة من لعبة الكنز المفقود</div>
+ </div>
+ <div class="center" style="position:fixed;bottom:10px;left:0;right:0">
+  <button class="btn primary" onclick="window.print()">🖨 طباعة الشهادة</button>
+  <button class="btn gray" onclick="showScreen('resultsScreen')">عودة</button>
+ </div>
+</section>
+
+<section id="teacherScreen" class="screen">
+ <div class="card">
+  <div class="stage-head">
+   <div><h2>لوحة متابعة المعلم</h2><p class="small">النتائج محفوظة محليًا على الجهاز، ولا تُرسل تلقائيًا إلى أي منصة.</p></div>
+   <div>
+    <button class="btn primary" onclick="exportCSV()">تصدير CSV</button>
+    <button class="btn danger" onclick="clearResults()">حذف السجل المحلي</button>
+   </div>
+  </div>
+  <div class="table-wrap">
+   <table>
+    <thead><tr><th>الطالب</th><th>الصف</th><th>النقاط</th><th>الصحة</th><th>المراحل</th><th>المدة</th><th>التوصية</th></tr></thead>
+    <tbody id="teacherRows"></tbody>
+   </table>
+  </div>
+  <div class="center"><button class="btn gray" onclick="showScreen('startScreen')">الصفحة الرئيسية</button></div>
+ </div>
+</section>
+
+<script>
+/* =========================
+   بيانات الأسئلة القابلة للتعديل
+   ========================= */
+const stages = [
+{
+ title:"المرحلة الأولى: خريطة البداية",
+ icon:"🧭", reward:"🔑", badge:"خبير الخرائط",
+ story:"وصلت إلى خريطة قديمة. لتفتح البوابة الأولى، اقرأ رموز الاتجاهات وفكرة الاتحاد.",
+ questions:[
+  {type:"mc", skill:"فهم التاريخ والرموز", q:"رفع علم الاتحاد لأول مرة في سماء جميرا كان يوم:", options:["2 ديسمبر 1971م","6 مايو 1976م","22 مايو 1976م","31 مارس 1976م"], answer:0, why:"ورد في الدرس أن علم الاتحاد رُفع في سماء جميرا ظهر يوم الخميس 2 ديسمبر 1971م."},
+  {type:"tf", skill:"المفاهيم الوطنية", q:"صح أم خطأ: يضرب المثل الإماراتي «يمناي بلا يسراي قليل منفوعها» للتأكيد على أن الاتحاد قوة والتفرق ضعف.", answer:true, why:"صحيح؛ يوضح المثل أن التعاون والاتحاد مصدر قوة."}
+ ]
+},
+{
+ title:"المرحلة الثانية: جزيرة المعرفة",
+ icon:"🏝️", reward:"🏺", badge:"مستكشف البنية التحتية",
+ story:"في الجزيرة تظهر آثار الطرق والمساكن والمدارس. اجمع القطعة الأثرية بفهم متطلبات المواطن.",
+ questions:[
+  {type:"match", skill:"المفاهيم الجغرافية", q:"طابق المفهوم مع تعريفه الصحيح.", pairs:[
+   ["البنية التحتية","مرافق وخدمات أساسية مثل الطرق والماء والكهرباء والمدارس."],
+   ["الإسكان","توفير المساكن المناسبة للمواطنين."],
+   ["الكوارث الطبيعية","ظواهر مثل الزلازل والفيضانات تحتاج إلى إغاثة."]
+  ], why:"توضح الدروس أن البنية التحتية تخدم حياة المواطن، وأن الإسكان كان أولوية."},
+  {type:"mc", skill:"تحليل المبادرات", q:"أي مبادرة تمثل اهتمام الشيخ زايد - رحمه الله - براحة المواطنين؟", options:["بناء المساكن والمدارس والعيادات","إلغاء الخدمات العامة","إيقاف شق الطرق","تقليل فرص التعليم"], answer:0, why:"وجه الشيخ زايد بتوفير المساكن والمدارس والمستشفيات والطرق والماء والكهرباء."}
+ ]
+},
+{
+ title:"المرحلة الثالثة: كهف الأدلة",
+ icon:"🪨", reward:"🔑", badge:"محلل الأدلة",
+ story:"داخل الكهف نقش تاريخي: «جيش واحد بقيادة واحدة وعلم واحد». فك شفرة القرار.",
+ questions:[
+  {type:"mc", skill:"الاستدلال التاريخي", q:"في أي تاريخ صدر قرار توحيد القوات المسلحة في دولة الإمارات العربية المتحدة؟", options:["2 ديسمبر 1971م","6 مايو 1976م","22 مايو 1976م","سبتمبر 1979م"], answer:1, why:"صدر قرار توحيد القوات المسلحة يوم الخميس الموافق 6 مايو 1976م."},
+  {type:"order", skill:"ترتيب الأحداث", q:"رتب الأحداث الآتية من الأسبق إلى الأحدث.", items:[
+   "قيام دولة الإمارات العربية المتحدة عام 1971م",
+   "صدور قرار توحيد القوات المسلحة في 6 مايو 1976م",
+   "متابعة تنفيذ قرار التوحيد باجتماعات أسبوعية في 22 مايو 1976م"
+  ], why:"بدأت الدولة عام 1971م، ثم صدر قرار التوحيد عام 1976م، ثم تابعت القيادة التنفيذ."}
+ ]
+},
+{
+ title:"المرحلة الرابعة: بوابة الاستكشاف",
+ icon:"🏛️", reward:"🔑", badge:"باحث إنساني",
+ story:"تحتاج البوابة إلى تحليل الأدلة: قيادة شابة مؤهلة ومساهمات إنسانية داخل الوطن وخارجه.",
+ questions:[
+  {type:"mc", skill:"قراءة النص التاريخي", q:"من الشخص المقصود بعنوان «قيادة شابة مؤهلة» في الدرس؟", options:["الشيخ محمد بن زايد آل نهيان","الشيخ زايد بن سلطان آل نهيان","اللواء عواد الخالدي","الشيخ راشد بن سعيد آل مكتوم"], answer:0, why:"يشير العنوان إلى الشيخ محمد بن زايد آل نهيان - حفظه الله - وعودته عام 1979م بعد التخرج في ساند هيرست."},
+  {type:"tf", skill:"تحليل المساهمات الإنسانية", q:"صح أم خطأ: اقتصرت مساهمات القوات المسلحة الإماراتية على المهام داخل الدولة فقط.", answer:false, why:"خطأ؛ شاركت القوات في مساعدات ومواقف إنسانية وميدانية خارج الدولة، مثل الإغاثة والمستشفيات والجسور الجوية."}
+ ]
+},
+{
+ title:"المرحلة الخامسة: الختم الأخير",
+ icon:"🏆", reward:"🔑", badge:"بطل الكنز",
+ story:"هذا الختم يجمع رموز الدرس: العلم والاتحاد والعطاء. حل التحدي لتصل إلى الصندوق.",
+ questions:[
+  {type:"mc", skill:"استخلاص الفكرة الرئيسة", q:"ما الفكرة الرئيسة من توحيد القوات المسلحة؟", options:["تقوية الاتحاد وحماية مكتسبات الدولة وأمنها","إلغاء دور المؤسسات العسكرية","فصل الإمارات عن بعضها","إيقاف التعاون بين الإمارات"], answer:0, why:"جاء التوحيد لتعزيز الكيان الاتحادي وبناء جيش واحد يحمي الدولة ومكتسباتها."},
+  {type:"mc", skill:"القيم والمواطنة", q:"أي قيمة تجسدها مبادرات الشيخ زايد - رحمه الله - في بناء مستشفى في لركانا ودعم التعليم؟", options:["العطاء ومساعدة الشقيق والصديق","العزلة عن الشعوب","التفرق","إهمال التعليم"], answer:0, why:"تجسد هذه المبادرات قيمة العطاء ومد يد العون للشقيق والصديق ودعم التعليم."}
+ ]
+}
+];
+
+let state = {
+ name:"", grade:"", score:0, keys:0, clues:0, completed:[],
+ answers:{}, correct:0, wrong:0, startTime:null, sound:true, currentStage:0
+};
+
+function showScreen(id){
+ document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+ if(id==="teacherScreen") renderTeacher();
+}
+function beep(ok=true){
+ if(!state.sound || !window.AudioContext) return;
+ try{
+  const c=new AudioContext(), o=c.createOscillator(), g=c.createGain();
+  o.frequency.value=ok?660:190;g.gain.value=.06;o.connect(g);g.connect(c.destination);
+  o.start();o.stop(c.currentTime+.12);
+ }catch(e){}
+}
+function toggleSound(){state.sound=!state.sound;alert(state.sound?"تم تشغيل المؤثرات الصوتية.":"تم إيقاف المؤثرات الصوتية.");}
+function startGame(){
+ const name=document.getElementById("studentName").value.trim();
+ const grade=document.getElementById("studentGrade").value;
+ if(!name){alert("يرجى إدخال اسم الطالب أولًا.");return}
+ if(!grade){alert("يرجى اختيار الصف الدراسي.");return}
+ state.name=name;state.grade=grade;state.startTime=Date.now();
+ updateHUD();showScreen("instructionsScreen");saveGame();
+}
+function updateHUD(){
+ document.getElementById("playerLabel").textContent=state.name||"المستكشف";
+ document.getElementById("scoreLabel").textContent=state.score;
+ document.getElementById("keysLabel").textContent=state.keys;
+ document.getElementById("cluesLabel").textContent=state.clues;
+ document.getElementById("progressBar").style.width=(state.completed.length/5*100)+"%";
+ document.getElementById("topbar").classList.toggle("hidden",!state.name);
+}
+function renderMap(){
+ updateHUD();
+ stages.forEach((s,i)=>{
+  const el=document.getElementById("site"+i);
+  el.className="site";
+  if(state.completed.includes(i)) el.classList.add("done");
+  else if(i>0 && !state.completed.includes(i-1)) el.classList.add("locked");
+  else el.classList.add("current");
+  el.innerHTML=s.icon+"<br>"+s.title.replace("المرحلة الأولى: ","").replace("المرحلة الثانية: ","").replace("المرحلة الثالثة: ","").replace("المرحلة الرابعة: ","").replace("المرحلة الخامسة: ","")+"<br><small>"+(state.completed.includes(i)?"✓ مكتملة":i>0&&!state.completed.includes(i-1)?"🔒 مغلقة":"متاحة")+"</small>";
+ });
+}
+function openStage(index){
+ if(index>0&&!state.completed.includes(index-1)){alert("أكمل المرحلة السابقة أولًا لفتح هذا الموقع.");return}
+ if(state.completed.includes(index)){alert("لقد جمعت كنز هذه المرحلة بالفعل. انتقل إلى الموقع التالي.");return}
+ state.currentStage=index;renderStage(index);showScreen("stageScreen");
+}
+function renderStage(index){
+ const s=stages[index];
+ document.getElementById("stageTitle").textContent=s.icon+" "+s.title;
+ document.getElementById("stageStory").textContent=s.story;
+ document.getElementById("stageCounter").textContent="التحديات: "+s.questions.length;
+ let html="";
+ s.questions.forEach((q,qi)=>{
+  html+=`<div class="challenge" id="qbox-${qi}"><h3>الدليل ${qi+1}: ${q.q}</h3>`;
+  if(q.type==="mc"){
+   html+=`<div class="options">${q.options.map((o,i)=>`<button class="option" onclick="answerMC(${qi},${i},this)">${o}</button>`).join("")}</div>`;
+  }
+  if(q.type==="tf"){
+   html+=`<div class="options"><button class="option" onclick="answerTF(${qi},true,this)">✓ صح</button><button class="option" onclick="answerTF(${qi},false,this)">✗ خطأ</button></div>`;
+  }
+  if(q.type==="match"){
+   html+=`<p class="small">اختر مفهومًا من العمود الأول ثم اختر تعريفه الموافق من العمود الثاني.</p>
+   <div class="match-grid">
+   <div>${q.pairs.map((p,i)=>`<div class="match-item term" data-i="${i}" onclick="selectMatch(${qi},'term',${i},this)">${p[0]}</div>`).join("")}</div>
+   <div>${q.pairs.map((p,i)=>`<div class="match-item def" data-i="${i}" onclick="selectMatch(${qi},'def',${i},this)">${p[1]}</div>`).join("")}</div>
+   </div><div id="matchStatus-${qi}" class="small"></div>`;
+  }
+  if(q.type==="order"){
+   html+=`<div class="order-list">${q.items.map((x,i)=>`<div class="order-row"><select id="ord-${qi}-${i}"><option value="">الترتيب</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select><span>${x}</span></div>`).join("")}</div>
+   <button class="btn primary" onclick="checkOrder(${qi})">تحقق من الترتيب</button>`;
+  }
+  html+=`<div id="feed-${qi}"></div></div>`;
+ });
+ document.getElementById("challengeArea").innerHTML=html;
+}
+function answered(qi){return !!state.answers[state.currentStage+"-"+qi]}
+function mark(qi,ok,why){
+ const key=state.currentStage+"-"+qi;
+ if(answered(qi)) return;
+ state.answers[key]=ok?"correct":"wrong";
+ if(ok){state.score+=10;state.correct++;state.clues++;beep(true)}
+ else{state.wrong++;beep(false)}
+ const f=document.getElementById("feed-"+qi);
+ f.className="feedback "+(ok?"ok":"no");
+ f.innerHTML=ok?`✓ إجابة صحيحة! حصلت على 10 نقاط ودليل معرفي.<br><span class="small">${why}</span>`:
+ `✗ ليست الإجابة الصحيحة. <b>تلميح:</b> ${why}<br><button class="btn primary" onclick="retry(${qi})">أعد المحاولة</button>`;
+ if(ok) checkStageDone();
+ updateHUD();saveGame();
+}
+function retry(qi){
+ delete state.answers[state.currentStage+"-"+qi];
+ document.getElementById("feed-"+qi).innerHTML="";
+ document.querySelectorAll(`#qbox-${qi} .option`).forEach(b=>b.disabled=false);
+}
+function answerMC(qi,choice,el){
+ if(answered(qi))return;
+ const q=stages[state.currentStage].questions[qi];
+ document.querySelectorAll(`#qbox-${qi} .option`).forEach(b=>b.disabled=true);
+ mark(qi,choice===q.answer,q.why);
+}
+function answerTF(qi,val){
+ if(answered(qi))return;
+ const q=stages[state.currentStage].questions[qi];
+ mark(qi,val===q.answer,q.why);
+}
+let matchSelections={};
+function selectMatch(qi,type,i,el){
+ if(answered(qi))return;
+ const qbox=document.getElementById("qbox-"+qi);
+ qbox.querySelectorAll("."+type).forEach(x=>x.classList.remove("selected"));
+ el.classList.add("selected");
+ matchSelections[qi]=matchSelections[qi]||{};matchSelections[qi][type]=i;
+ const s=matchSelections[qi];
+ if(s.term!==undefined&&s.def!==undefined){
+  if(s.term===s.def){
+   document.getElementById("matchStatus-"+qi).innerHTML+="<div class='feedback ok'>✓ تطابق صحيح</div>";
+   delete s.term;delete s.def;
+   qbox.querySelector(`.term[data-i="${el.dataset.i}"]`)?.classList.add("selected");
+   const total=qbox.querySelectorAll(".term").length;
+   const good=qbox.querySelectorAll(".feedback.ok").length;
+   if(good===total) mark(qi,true,stages[state.currentStage].questions[qi].why);
+  }else{
+   document.getElementById("matchStatus-"+qi).innerHTML="<div class='feedback no'>هذا التطابق غير صحيح، حاول من جديد.</div>";
+   qbox.querySelectorAll(".match-item").forEach(x=>x.classList.remove("selected"));delete s.term;delete s.def;
+  }
+ }
+}
+function checkOrder(qi){
+ if(answered(qi))return;
+ let ok=true;
+ [0,1,2].forEach(i=>{if(document.getElementById(`ord-${qi}-${i}`).value!==String(i+1))ok=false});
+ mark(qi,ok,stages[state.currentStage].questions[qi].why);
+}
+function checkStageDone(){
+ const qs=stages[state.currentStage].questions;
+ const all=qs.every((_,i)=>state.answers[state.currentStage+"-"+i]==="correct");
+ if(all) setTimeout(()=>completeStage(state.currentStage),450);
+}
+function completeStage(i){
+ if(state.completed.includes(i))return;
+ state.completed.push(i); state.keys=Math.min(4,state.keys+1); state.score+=2;
+ document.getElementById("rewardIcon").textContent=stages[i].reward;
+ document.getElementById("rewardTitle").textContent="تم فك الختم!";
+ document.getElementById("rewardText").textContent=`أكملت ${stages[i].title} وجمعت مكافأة جديدة.`;
+ document.getElementById("rewardBadge").textContent="شارة مكتسبة: "+stages[i].badge;
+ updateHUD();saveGame();showScreen("rewardScreen");
+}
+function afterReward(){
+ if(state.completed.length===5) showScreen("finalScreen");
+ else {showScreen("mapScreen");renderMap();}
+}
+function finalAnswer(ok){
+ const f=document.getElementById("finalFeedback");
+ if(!ok){f.className="feedback no";f.textContent="تلميح: اربط بين الاتحاد، وخدمة المواطن، والعطاء الإنساني.";beep(false);return}
+ state.score=Math.min(100,state.score+8);beep(true);openChest();
+}
+function openChest(){
+ document.getElementById("finalChest").classList.add("open");
+ setTimeout(finishGame,600);
+}
+function finishGame(){
+ state.score=Math.min(100,state.score);
+ const total=state.correct+state.wrong;
+ const accuracy=total?Math.round(state.correct/total*100):100;
+ const minutes=Math.max(1,Math.round((Date.now()-state.startTime)/60000));
+ const record={
+  name:state.name,grade:state.grade,score:state.score,accuracy,
+  stages:state.completed.length,duration:minutes+" دقيقة",
+  recommendation:accuracy>=85?"أداء متميز: إثراء بمهام تحليلية متقدمة.":accuracy>=65?"أداء جيد: راجع المفاهيم والتواريخ الرئيسة.":"يحتاج إلى تعزيز: أعد قراءة الأدلة واستخدم التلميحات."
+ };
+ let records=JSON.parse(localStorage.getItem("lostTreasureRecords")||"[]");
+ records.push(record);localStorage.setItem("lostTreasureRecords",JSON.stringify(records));
+ document.getElementById("resultSummary").innerHTML=
+ `أحسنت يا <b>${state.name}</b>! أنهيت ${state.completed.length} مراحل، وحصلت على <b>${state.score}/100</b> نقطة.
+ نسبة الإجابات الصحيحة: <b>${accuracy}%</b>، ومدة الرحلة: <b>${minutes} دقيقة</b>.`;
+ const badges=["المستكشف المبتدئ","خبير الخرائط","محلل الأدلة","باحث إنساني","بطل الكنز"];
+ document.getElementById("earnedBadges").innerHTML=badges.map(x=>`<span class="badge">🏅 ${x}</span>`).join("");
+ saveGame();showScreen("resultsScreen");
+}
+function issueCertificate(){
+ document.getElementById("certName").textContent=state.name;
+ document.getElementById("certScore").textContent=state.score;
+ document.getElementById("certDate").textContent=new Date().toLocaleDateString("ar-AE");
+ showScreen("certificateScreen");
+}
+function saveGame(){
+ try{localStorage.setItem("lostTreasureSave",JSON.stringify(state))}catch(e){}
+}
+function loadGame(){
+ try{
+  const s=JSON.parse(localStorage.getItem("lostTreasureSave")||"null");
+  if(s&&s.name){state={...state,...s};document.getElementById("studentName").value=state.name;document.getElementById("studentGrade").value=state.grade;updateHUD();}
+ }catch(e){}
+}
+function restartGame(){
+ if(!confirm("هل تريد بدء مغامرة جديدة؟"))return;
+ const oldName=state.name,oldGrade=state.grade;
+ state={name:oldName,grade:oldGrade,score:0,keys:0,clues:0,completed:[],answers:{},correct:0,wrong:0,startTime:Date.now(),sound:true,currentStage:0};
+ saveGame();updateHUD();showScreen("instructionsScreen");
+}
+function openTeacher(){showScreen("teacherScreen");}
+function renderTeacher(){
+ let records=[];try{records=JSON.parse(localStorage.getItem("lostTreasureRecords")||"[]")}catch(e){}
+ const rows=document.getElementById("teacherRows");
+ rows.innerHTML=records.length?records.map(r=>`<tr><td>${r.name}</td><td>${r.grade}</td><td>${r.score}/100</td><td>${r.accuracy}%</td><td>${r.stages}/5</td><td>${r.duration}</td><td>${r.recommendation}</td></tr>`).join("")
+ :"<tr><td colspan='7'>لا توجد نتائج محفوظة بعد.</td></tr>";
+}
+function exportCSV(){
+ let records=[];try{records=JSON.parse(localStorage.getItem("lostTreasureRecords")||"[]")}catch(e){}
+ if(!records.length){alert("لا توجد نتائج لتصديرها.");return}
+ const head=["اسم الطالب","الصف","النقاط","نسبة الإجابات الصحيحة","المراحل المكتملة","المدة","التوصية"];
+ const csv="\uFEFF"+[head,...records.map(r=>[r.name,r.grade,r.score,r.accuracy+"%",r.stages,r.duration,r.recommendation])]
+ .map(row=>row.map(v=>`"${String(v).replaceAll('"','""')}"`).join(",")).join("\n");
+ const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));
+ a.download="نتائج_الكنز_المفقود.csv";a.click();URL.revokeObjectURL(a.href);
+}
+function clearResults(){
+ if(confirm("سيتم حذف جميع النتائج المحلية من هذا الجهاز. هل تريد المتابعة؟")){
+  localStorage.removeItem("lostTreasureRecords");renderTeacher();
+ }
+}
+loadGame();
+</script>
+</body>
+</html>
+```
+
+### طريقة التشغيل
+1. انسخ الكود كاملًا في ملف نصي.
+2. احفظه باسم: `lost-treasure.html`
+3. افتح الملف بالنقر المزدوج عليه في Chrome أو Edge أو Firefox.
+4. لا يحتاج إلى إنترنت أو خادم أو تثبيت برامج.
+
+### تعديل الأسئلة
+داخل الكود ابحث عن:
+
+```javascript
+const stages = [
+```
+
+ستجد بيانات كل مرحلة وأسئلتها. يمكن تعديل:
+- `q`: نص السؤال.
+- `options`: الاختيارات.
+- `answer`: رقم الإجابة الصحيحة، ويبدأ من `0`.
+- `why`: التغذية الراجعة والتفسير.
+- `skill`: المهارة المستهدفة.
+- `pairs`: أزواج المطابقة.
+- `items`: أحداث الترتيب.
+
+النتائج والتقدم تحفظ محليًا على الجهاز عبر `localStorage`، ويمكن للمعلم تصدير النتائج فعليًا إلى ملف CSV من لوحة المعلم.
